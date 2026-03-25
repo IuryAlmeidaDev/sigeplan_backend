@@ -43,6 +43,20 @@ public class RestExceptionHandler {
         return build(status, ex.getReason(), List.of());
     }
 
+    @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ApiErrorResponse> handleMethodNotSupported(
+            org.springframework.web.HttpRequestMethodNotSupportedException ex
+    ) {
+        return build(HttpStatus.METHOD_NOT_ALLOWED, "Método HTTP não suportado para este endpoint.", List.of());
+    }
+
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<ApiErrorResponse> handleAccessDenied(
+            org.springframework.security.access.AccessDeniedException ex
+    ) {
+        return build(HttpStatus.FORBIDDEN, "Acesso negado.", List.of());
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleGeneric(Exception ex) {
         return build(

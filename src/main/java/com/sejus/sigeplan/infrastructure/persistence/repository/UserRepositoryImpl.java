@@ -12,9 +12,12 @@ import com.sejus.sigeplan.infrastructure.persistence.entity.UserEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.UUID;
 
 @Repository
 @RequiredArgsConstructor
@@ -30,6 +33,18 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public Optional<User> findByCpf(String cpf) {
         return jpaRepository.findByCpf(cpf).map(this::toDomain);
+    }
+
+    @Override
+    public Optional<User> findById(UUID id) {
+        return jpaRepository.findById(id).map(this::toDomain);
+    }
+
+    @Override
+    public List<User> findAll() {
+        return jpaRepository.findAll().stream()
+                .map(this::toDomain)
+                .toList();
     }
 
     @Override
@@ -76,78 +91,116 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     private Set<Role> toRoles(Set<RoleEntity> roles) {
-        return roles.stream()
-                .map(role -> new Role(
-                        role.getId(),
-                        role.getName(),
-                        role.getDescription(),
-                        toPermissions(role.getPermissions()),
-                        role.getCreatedAt(),
-                        role.getUpdatedAt()
-                ))
-                .collect(Collectors.toSet());
+        if (roles == null) {
+            return Collections.emptySet();
+        }
+
+        Set<Role> result = new HashSet<>();
+        for (RoleEntity role : roles) {
+            result.add(new Role(
+                    role.getId(),
+                    role.getName(),
+                    role.getDescription(),
+                    toPermissions(role.getPermissions()),
+                    role.getCreatedAt(),
+                    role.getUpdatedAt()
+            ));
+        }
+        return result;
     }
 
     private Set<Permission> toPermissions(Set<PermissionEntity> permissions) {
-        return permissions.stream()
-                .map(permission -> new Permission(
-                        permission.getId(),
-                        permission.getName(),
-                        permission.getDescription(),
-                        permission.getCreatedAt(),
-                        permission.getUpdatedAt()
-                ))
-                .collect(Collectors.toSet());
+        if (permissions == null) {
+            return Collections.emptySet();
+        }
+
+        Set<Permission> result = new HashSet<>();
+        for (PermissionEntity permission : permissions) {
+            result.add(new Permission(
+                    permission.getId(),
+                    permission.getName(),
+                    permission.getDescription(),
+                    permission.getCreatedAt(),
+                    permission.getUpdatedAt()
+            ));
+        }
+        return result;
     }
 
     private Set<Unit> toUnits(Set<UnitEntity> units) {
-        return units.stream()
-                .map(unit -> new Unit(
-                        unit.getId(),
-                        unit.getName(),
-                        unit.getCode(),
-                        unit.getDescription(),
-                        unit.isActive(),
-                        unit.getCreatedAt(),
-                        unit.getUpdatedAt()
-                ))
-                .collect(Collectors.toSet());
+        if (units == null) {
+            return Collections.emptySet();
+        }
+
+        Set<Unit> result = new HashSet<>();
+        for (UnitEntity unit : units) {
+            result.add(new Unit(
+                    unit.getId(),
+                    unit.getName(),
+                    unit.getCode(),
+                    unit.getDescription(),
+                    unit.isActive(),
+                    unit.getCreatedAt(),
+                    unit.getUpdatedAt()
+            ));
+        }
+        return result;
     }
 
     private Set<RoleEntity> toRoleEntities(Set<Role> roles) {
-        return roles.stream()
-                .map(role -> RoleEntity.builder()
-                        .id(role.id())
-                        .name(role.name())
-                        .description(role.description())
-                        .permissions(
-                                role.permissions().stream()
-                                        .map(permission -> PermissionEntity.builder()
-                                                .id(permission.id())
-                                                .name(permission.name())
-                                                .description(permission.description())
-                                                .createdAt(permission.createdAt())
-                                                .updatedAt(permission.updatedAt())
-                                                .build())
-                                        .collect(Collectors.toSet())
-                        )
-                        .createdAt(role.createdAt())
-                        .updatedAt(role.updatedAt())
-                        .build())
-                .collect(Collectors.toSet());
+        if (roles == null) {
+            return Collections.emptySet();
+        }
+
+        Set<RoleEntity> result = new HashSet<>();
+        for (Role role : roles) {
+            result.add(RoleEntity.builder()
+                    .id(role.id())
+                    .name(role.name())
+                    .description(role.description())
+                    .permissions(toPermissionEntities(role.permissions()))
+                    .createdAt(role.createdAt())
+                    .updatedAt(role.updatedAt())
+                    .build());
+        }
+        return result;
+    }
+
+    private Set<PermissionEntity> toPermissionEntities(Set<Permission> permissions) {
+        if (permissions == null) {
+            return Collections.emptySet();
+        }
+
+        Set<PermissionEntity> result = new HashSet<>();
+        for (Permission permission : permissions) {
+            result.add(PermissionEntity.builder()
+                    .id(permission.id())
+                    .name(permission.name())
+                    .description(permission.description())
+                    .createdAt(permission.createdAt())
+                    .updatedAt(permission.updatedAt())
+                    .build());
+        }
+        return result;
     }
 
     private Set<UnitEntity> toUnitEntities(Set<Unit> units) {
-        return units.stream()
-                .map(unit -> UnitEntity.builder()
-                        .id(unit.id())
-                        .name(unit.name())
-                        .code(unit.code())
-                        .description(unit.description())
-                        .active(unit.active())
-                        .createdAt(unit.createdAt())
-                        .updatedAt(unit.updatedAt())
-                        .build())
-                .collect(Collectors.toSet());
+        if (units == null) {
+            return Collections.emptySet();
+        }
+
+        Set<UnitEntity> result = new HashSet<>();
+        for (Unit unit : units) {
+            result.add(UnitEntity.builder()
+                    .id(unit.id())
+                    .name(unit.name())
+                    .code(unit.code())
+                    .description(unit.description())
+                    .active(unit.active())
+                    .createdAt(unit.createdAt())
+                    .updatedAt(unit.updatedAt())
+                    .build());
+        }
+        return result;
     }
 }
