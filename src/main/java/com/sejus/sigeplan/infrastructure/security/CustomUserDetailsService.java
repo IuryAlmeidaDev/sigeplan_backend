@@ -15,7 +15,9 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findByCpf(username)
+        String normalizedCpf = username == null ? null : username.replaceAll("\\D", "");
+
+        return userRepository.findByCpf(normalizedCpf)
                 .map(user -> new AuthenticatedUser(
                         user.id().toString(),
                         user.cpf(),

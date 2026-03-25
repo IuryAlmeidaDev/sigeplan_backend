@@ -3,6 +3,7 @@ package com.sejus.sigeplan.interfaces.rest.handler;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -31,6 +32,11 @@ public class RestExceptionHandler {
         return build(HttpStatus.UNAUTHORIZED, "Credenciais inválidas.", List.of());
     }
 
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<ApiErrorResponse> handleDisabledUser(DisabledException ex) {
+        return build(HttpStatus.FORBIDDEN, "Usuário inativo.", List.of());
+    }
+
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<ApiErrorResponse> handleResponseStatus(ResponseStatusException ex) {
         HttpStatus status = HttpStatus.valueOf(ex.getStatusCode().value());
@@ -39,7 +45,11 @@ public class RestExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleGeneric(Exception ex) {
-        return build(HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno do servidor.", List.of(ex.getClass().getSimpleName()));
+        return build(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Erro interno do servidor.",
+                List.of(ex.getClass().getSimpleName())
+        );
     }
 
     private ResponseEntity<ApiErrorResponse> build(HttpStatus status, String message, List<String> details) {
@@ -50,6 +60,7 @@ public class RestExceptionHandler {
                 message,
                 details
         );
+
         return ResponseEntity.status(status).body(response);
     }
 }

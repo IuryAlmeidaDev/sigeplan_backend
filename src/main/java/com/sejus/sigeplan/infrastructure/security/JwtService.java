@@ -11,8 +11,10 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class JwtService {
@@ -20,14 +22,27 @@ public class JwtService {
     private final SecretKey secretKey;
     private final long expiration;
 
-    public JwtService(@Value("${app.security.jwt.secret}") String secret,
-                      @Value("${app.security.jwt.expiration}") long expiration) {
-        this.secretKey = Keys.hmacShaKeyFor(resolveSecret(secret));
+    public JwtService(
+            @Value("${app.security.jwt.secret}") String secret,
+            @Value("${app.security.jwt.expiration}") long expiration
+    ) {
+        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.expiration = expiration;
     }
 
     public String generateToken(User user) {
         Instant now = Instant.now();
+
+        List<String> roles = user.roles().stream()
+                .map(role -> role.name())
+                .distinct()
+                .toList();
+
+        List<String> permissions = user.roles().stream()
+                .flatMap(role -> role.permissions().stream())
+                .map(permission -> permission.name())
+                .distinct()
+                .toList();
 
         return Jwts.builder()
                 .subject(user.cpf())
@@ -36,12 +51,8 @@ public class JwtService {
                         "cpf", user.cpf(),
                         "email", user.email(),
                         "name", user.fullName(),
-                        "roles", user.roles().stream().map(role -> role.name()).toList(),
-                        "permissions", user.roles().stream()
-                                .flatMap(role -> role.permissions().stream())
-                                .map(permission -> permission.name())
-                                .distinct()
-                                .toList()
+                        "roles", roles,
+                        "permissions", permissions
                 ))
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plusMillis(expiration)))
@@ -62,12 +73,15 @@ public class JwtService {
         return expiration / 1000;
     }
 
-    @SuppressWarnings("unchecked")
     public Set<String> extractRoles(String token) {
         Object roles = extractAllClaims(token).get("roles");
-        if (roles instanceof java.util.List<?> roleList) {
-            return roleList.stream().map(String::valueOf).collect(java.util.stream.Collectors.toSet());
+
+        if (roles instanceof List<?> roleList) {
+            return roleList.stream()
+                    .map(String::valueOf)
+                    .collect(Collectors.toSet());
         }
+
         return Set.of();
     }
 
@@ -76,10 +90,10 @@ public class JwtService {
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload();
-    }
-
-    private byte[] resolveSecret(String secret) {
-        return secret.getBytes(StandardCharsets.UTF_8);
+        return Jwts.parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 }
