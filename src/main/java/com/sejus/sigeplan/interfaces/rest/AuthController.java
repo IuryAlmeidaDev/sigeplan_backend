@@ -30,11 +30,14 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @Operation(summary = "Registrar usuário", description = "Cria um novo usuário e retorna o token JWT")
+    @Operation(
+            summary = "Registrar usuário",
+            description = "Cria um novo usuário no sistema e retorna o token JWT de autenticação"
+    )
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Usuário registrado com sucesso"),
             @ApiResponse(responseCode = "400", description = "Dados inválidos"),
-            @ApiResponse(responseCode = "409", description = "E-mail já cadastrado")
+            @ApiResponse(responseCode = "409", description = "CPF ou e-mail já cadastrado")
     })
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
@@ -42,25 +45,30 @@ public class AuthController {
         return authService.register(request);
     }
 
-    @Operation(summary = "Realizar login", description = "Autentica o usuário e retorna o token JWT")
+    @Operation(
+            summary = "Realizar login",
+            description = "Autentica o usuário com CPF e senha e retorna o token JWT"
+    )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Login realizado com sucesso"),
             @ApiResponse(responseCode = "400", description = "Dados inválidos"),
-            @ApiResponse(responseCode = "401", description = "Credenciais inválidas")
+            @ApiResponse(responseCode = "401", description = "Credenciais inválidas"),
+            @ApiResponse(responseCode = "403", description = "Usuário inativo")
     })
     @PostMapping("/login")
+    @ResponseStatus(HttpStatus.OK)
     public AuthResponse login(@Valid @RequestBody LoginRequest request) {
         return authService.login(request);
     }
 
     @Operation(
             summary = "Obter usuário autenticado",
-            description = "Retorna os dados do usuário a partir do token JWT",
+            description = "Retorna os dados do usuário autenticado com base no token JWT enviado na requisição",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Usuário autenticado retornado com sucesso"),
-            @ApiResponse(responseCode = "401", description = "Token ausente ou inválido")
+            @ApiResponse(responseCode = "401", description = "Token ausente, inválido ou expirado")
     })
     @GetMapping("/me")
     public AuthenticatedUserResponse me(@AuthenticationPrincipal AuthenticatedUser authenticatedUser) {

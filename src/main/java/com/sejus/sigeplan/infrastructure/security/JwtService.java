@@ -28,12 +28,20 @@ public class JwtService {
 
     public String generateToken(User user) {
         Instant now = Instant.now();
+
         return Jwts.builder()
-                .subject(user.email())
+                .subject(user.cpf())
                 .claims(Map.of(
                         "uid", user.id().toString(),
-                        "roles", user.roles().stream().map(Enum::name).toList(),
-                        "name", user.fullName()
+                        "cpf", user.cpf(),
+                        "email", user.email(),
+                        "name", user.fullName(),
+                        "roles", user.roles().stream().map(role -> role.name()).toList(),
+                        "permissions", user.roles().stream()
+                                .flatMap(role -> role.permissions().stream())
+                                .map(permission -> permission.name())
+                                .distinct()
+                                .toList()
                 ))
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plusMillis(expiration)))

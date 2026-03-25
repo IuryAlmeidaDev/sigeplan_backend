@@ -18,19 +18,11 @@ public record AuthResponse(
 
         UserResponse user
 ) {
-    @Schema(name = "AuthUserResponse", description = "Dados resumidos do usuário autenticado")
     public record UserResponse(
-
-            @Schema(description = "ID do usuário", example = "550e8400-e29b-41d4-a716-446655440000")
             String id,
-
-            @Schema(description = "Nome completo", example = "Iury Costa")
             String fullName,
-
-            @Schema(description = "E-mail", example = "iury@sigeplan.gov.br")
             String email,
-
-            @Schema(description = "Perfis de acesso do usuário")
+            String cpf,
             Set<String> roles
     ) {
     }

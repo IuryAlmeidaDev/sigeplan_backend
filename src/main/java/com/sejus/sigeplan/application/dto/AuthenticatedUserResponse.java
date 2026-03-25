@@ -6,6 +6,7 @@ public record AuthenticatedUserResponse(
         String id,
         String fullName,
         String email,
+        String cpf,
         Set<String> roles
 ) {
 }
