@@ -9,4 +9,6 @@ import java.util.UUID;
 public interface SpringDataRoleJpaRepository extends JpaRepository<RoleEntity, UUID> {
 
     Optional<RoleEntity> findByName(String name);
+
+    boolean existsByName(String name);
 }
